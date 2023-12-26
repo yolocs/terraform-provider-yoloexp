@@ -112,6 +112,9 @@ func (d *notionDatabaseDataSource) Read(ctx context.Context, req datasource.Read
 
 	diags := resp.State.Set(ctx, state)
 	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 }
 
 func (d *notionDatabaseDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
