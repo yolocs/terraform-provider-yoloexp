@@ -5,13 +5,15 @@ package provider
 
 import (
 	"context"
-	"net/http"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/jomei/notionapi"
 )
 
 // Ensure YoloProvider satisfies various provider interfaces.
@@ -40,7 +42,8 @@ func (p *YoloProvider) Schema(ctx context.Context, req provider.SchemaRequest, r
 		Attributes: map[string]schema.Attribute{
 			"notion_secret": schema.StringAttribute{
 				MarkdownDescription: "Notion integration secret",
-				Optional:            false,
+				Optional:            true,
+				Sensitive:           true,
 			},
 		},
 	}
@@ -56,10 +59,41 @@ func (p *YoloProvider) Configure(ctx context.Context, req provider.ConfigureRequ
 	}
 
 	// Configuration values are now available.
-	// if data.Endpoint.IsNull() { /* ... */ }
+	if data.NotionSecret.IsUnknown() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("notion_secret"),
+			"Unknown Notion secret.",
+			"The provider cannot connect to Notion without a secret.",
+		)
+	}
 
-	// Example client configuration for data sources and resources
-	client := http.DefaultClient
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	notionSecret := os.Getenv("NOTION_SECRET")
+	if !data.NotionSecret.IsNull() {
+		notionSecret = data.NotionSecret.ValueString()
+	}
+
+	if notionSecret == "" {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("notion_secret"),
+			"Notion secret is missing.",
+			"The provider cannot connect to Notion without a secret.",
+		)
+	}
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Create a notion client.
+	client := notionapi.NewClient(
+		notionapi.Token(notionSecret),
+		notionapi.WithRetry(3),
+	)
+
 	resp.DataSourceData = client
 	resp.ResourceData = client
 }
