@@ -35,7 +35,7 @@ func main() {
 
 	opts := providerserver.ServeOpts{
 		// TODO: Update this string with the published name of your provider.
-		Address: "github.com/yolocs/terraform-provider-yoloexp",
+		Address: "registry.terraform.io/hashicorp/yoloexp",
 		Debug:   debug,
 	}
 

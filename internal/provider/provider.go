@@ -106,7 +106,8 @@ func (p *YoloProvider) Resources(ctx context.Context) []func() resource.Resource
 
 func (p *YoloProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		NewExampleDataSource,
+		NewNotionPageDataSource,
+		NewNotionDatabaseDataSource,
 	}
 }
 
